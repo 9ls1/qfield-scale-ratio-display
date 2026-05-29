@@ -1,0 +1,7 @@
+[general]
+name=Scale ratio display
+description=Displays map scale as 1 : scale text instead of scale bar (e.g., 1:500). Original image number-1.png by Rahul Kaklotar
+author=Anne B. Nilsen, nibio.no
+icon=scale.svg
+version=1.0
+homepage=https://gitlab.nibio.no/abni/scale-ratio-display
