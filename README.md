@@ -9,7 +9,7 @@ How it looks:\
 scale ratio in center on top of screen – in addition to the scale bar (if activated in the Settings)\
 <img width="320" alt="scale_ratio_text" src="https://github.com/user-attachments/assets/1846cd94-8575-45c2-a0e6-b338548f6eac" />
 
-# How to install
+## How to install
 https://docs.qfield.org/how-to/advanced-how-tos/plugins/?h=plugin#application-plugins
 
 QField > Settings, scroll down to User Interface and Manage plugins, click on the three dots and click on Install plugin from URL.
