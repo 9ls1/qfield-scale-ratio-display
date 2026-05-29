@@ -4,4 +4,4 @@ description=Displays map scale as 1 : scale text instead of scale bar (e.g., 1:5
 author=Anne B. Nilsen, nibio.no
 icon=scale.svg
 version=1.0
-homepage=https://gitlab.nibio.no/abni/scale-ratio-display
+homepage=https://github.com/9ls1/qfield-scale-ratio-display
