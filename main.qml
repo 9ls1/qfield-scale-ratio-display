@@ -15,7 +15,6 @@ Item {
   property int boxPaddingY: 3
 
   // Felles stilverdier for både målestokkboks og toggle-knapp
-  property color panelColor: Theme.white
   property color panelBorderColor: Theme.mainColor
   property real panelOpacity: 0.7
   property int panelRadius: 4
@@ -90,7 +89,7 @@ Item {
     width: scaleRow.implicitWidth + (boxPaddingX * 2)
     height: scaleRow.implicitHeight + (boxPaddingY * 2)
 
-    color: panelColor
+    color: "white"
     opacity: panelOpacity
     radius: panelRadius
 
@@ -186,7 +185,7 @@ Item {
     height: scaleBackground.height
     radius: panelRadius
 
-    color: panelColor
+    color: "white"
     opacity: panelOpacity
 
     border {
@@ -226,4 +225,5 @@ Item {
     iface.mainWindow().contentItem.children.push(scaleBackground)
     iface.mainWindow().contentItem.children.push(toggleButton)
   }
+}
 }
