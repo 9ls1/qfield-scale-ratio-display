@@ -3,19 +3,12 @@ import QtQuick.Controls
 import org.qfield
 import Theme
 
-// Plassering: Endre anchors (top/bottom, left/right)
-// Størrelse: Endre font.pixelSize
-// Bakgrunnsfarge: Endre color i Rectangle
-// Desimalplasser: Endre Math.round() til toFixed(1) for å vise f.eks. "1:500.5"
-
 Item {
   id: scaleRatioDisplay
 
-  // Funksjon for å formatere tallet med mellomrom
   function formatScale(scale) {
     var roundedScale = Math.round(scale)
     
-    // Legg til mellomrom hvis tallet er større enn 4999
     if (roundedScale > 9999) {
       return "1 : " + roundedScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
     } else {
@@ -32,8 +25,8 @@ Item {
       horizontalCenter: parent.horizontalCenter
     }
     
-    width: Math.max(scaleTextLabel.width, scaleInput.width) + 16
-    height: scaleTextLabel.height + scaleInput.height + 16
+    width: Math.max(scaleTextLabel.width, inputContainer.width) + 16
+    height: scaleTextLabel.height + inputContainer.height + 24
     
     color: Theme.white
     opacity: 0.7
@@ -47,9 +40,9 @@ Item {
     Column {
       anchors {
         centerIn: parent
-        margins: 4
+        margins: 8
       }
-      spacing: 4
+      spacing: 8
 
       Text {
         id: scaleTextLabel
@@ -62,7 +55,6 @@ Item {
         
         text: formatScale(iface.mapCanvas().mapSettings.scale)
         
-        // Update scale text whenever map scale changes
         Connections {
           target: iface.mapCanvas()
           
@@ -79,56 +71,68 @@ Item {
       Rectangle {
         id: inputContainer
         anchors.horizontalCenter: parent.horizontalCenter
-        width: 150
-        height: 32
+        width: 180
+        height: 36
         color: Theme.white
         border.color: Theme.mainColor
         border.width: 1
         radius: 2
 
-        TextInput {
-          id: scaleInput
-          
-          anchors {
-            fill: parent
-            margins: 4
+        Row {
+          anchors.fill: parent
+          anchors.margins: 4
+          spacing: 4
+
+          Text {
+            anchors.verticalCenter: parent.verticalCenter
+            font.pixelSize: 14
+            color: Theme.textColor
+            text: "1:"
+            width: 24
           }
-          
-          font.pixelSize: 14
-          color: Theme.textColor
-          text: Math.round(iface.mapCanvas().mapSettings.scale).toString()
-          inputMethodHints: Qt.ImhDigitsOnly
-          
-          onEditingFinished: {
-            if (text !== "") {
-              var newScale = parseFloat(text)
-              if (newScale > 0) {
-                iface.mapCanvas().mapSettings.scale = newScale
-                scaleTextLabel.text = formatScale(newScale)
+
+          TextInput {
+            id: scaleInput
+            
+            anchors.verticalCenter: parent.verticalCenter
+            
+            width: parent.width - 28
+            height: parent.height
+            
+            font.pixelSize: 14
+            color: Theme.textColor
+            text: Math.round(iface.mapCanvas().mapSettings.scale).toString()
+            inputMethodHints: Qt.ImhDigitsOnly
+            
+            onEditingFinished: applyScale()
+            
+            Keys.onReturnPressed: {
+              applyScale()
+              focus = false
+            }
+            
+            Keys.onEnterPressed: {
+              applyScale()
+              focus = false
+            }
+            
+            function applyScale() {
+              if (text !== "" && text !== "0") {
+                var newScale = parseFloat(text)
+                if (newScale > 0) {
+                  iface.mapCanvas().mapSettings.scale = newScale
+                  scaleTextLabel.text = formatScale(newScale)
+                }
               }
             }
           }
-        }
-
-        Text {
-          anchors {
-            right: parent.right
-            rightMargin: 8
-            verticalCenter: parent.verticalCenter
-          }
-          
-          font.pixelSize: 12
-          color: Theme.textColor
-          text: "1:"
         }
       }
     }
   }
 
   Component.onCompleted: {
-    // Add scale background to main window
     iface.mainWindow().contentItem.children.push(scaleBackground)
-    
     iface.mainWindow().displayToast('Scale Ratio Display plugin loaded')
   }
 }
