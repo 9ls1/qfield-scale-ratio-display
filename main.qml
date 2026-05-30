@@ -14,10 +14,11 @@ Item {
   property int boxPaddingX: 6
   property int boxPaddingY: 3
 
-  // Felles stilverdier slik at målestokkboks og toggle-knapp ser ut som samme UI-familie
-  property color panelColor: Theme.white
+  // Felles stilverdier slik at målestokkboks og toggle-knapp ser ut som samme UI-familie.
+  // Viktig: bruk semi-transparent bakgrunnsfarge i stedet for opacity på hele boksen,
+  // slik at tekst og kantlinjer forblir tydelige.
+  property color panelBackgroundColor: Qt.rgba(1, 1, 1, 0.7)
   property color panelBorderColor: Theme.mainColor
-  property real panelOpacity: 0.7
   property int panelRadius: 4
   property int panelBorderWidth: 1
 
@@ -29,6 +30,7 @@ Item {
   // Formaterer målestokkstall:
   // 9876  -> "9876"
   // 10000 -> "10 000"
+  // 16789 -> "16 789"
   function formatScaleNumber(value) {
     var rounded = Math.round(value)
     if (rounded >= 10000) {
@@ -90,8 +92,7 @@ Item {
     width: scaleRow.implicitWidth + (boxPaddingX * 2)
     height: scaleRow.implicitHeight + (boxPaddingY * 2)
 
-    color: panelColor
-    opacity: panelOpacity
+    color: panelBackgroundColor
     radius: panelRadius
 
     border {
@@ -122,7 +123,7 @@ Item {
         // Auto-bredde etter antall sifre
         width: Math.max(36, contentWidth + 4)
 
-        // Litt lavere høyde enn før for å redusere totalhøyden på boksen
+        // Litt lavere høyde enn standard for å redusere totalhøyden på boksen
         height: 26
 
         font.pixelSize: 18
@@ -178,7 +179,7 @@ Item {
   }
 
   // Knapp øverst til høyre for å vise/skjule målestokkboksen.
-  // Den bruker samme stil som målestokkboksen for å fremstå som en del av samme UI.
+  // Samme høyde og visuelle stil som målestokkboksen gir et mer helhetlig uttrykk.
   Rectangle {
     id: toggleButton
 
@@ -189,13 +190,11 @@ Item {
       rightMargin: 68
     }
 
-    // Samme høyde og stil som målestokkboksen gir et mer helhetlig uttrykk
     width: 42
     height: scaleBackground.height
     radius: panelRadius
 
-    color: panelColor
-    opacity: panelOpacity
+    color: panelBackgroundColor
 
     border {
       color: panelBorderColor
