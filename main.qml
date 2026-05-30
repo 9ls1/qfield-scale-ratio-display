@@ -19,10 +19,10 @@ Item {
   }
 
   function applyScale() {
-    if (scaleInput.text === "" || scaleInput.text === "0")
+    if (scaleField.text === "" || scaleField.text === "0")
       return
 
-    var newScale = parseFloat(scaleInput.text)
+    var newScale = parseFloat(scaleField.text)
     if (isNaN(newScale) || newScale <= 0) {
       iface.mainWindow().displayToast("Ugyldig målestokk")
       return
@@ -35,7 +35,7 @@ Item {
 
     try {
       canvas.mapCanvasWrapper.zoomScale(center, newScale, false)
-      scaleInput.focus = false
+      scaleField.focus = false
     } catch (e) {
       console.log("zoomScale failed: " + e)
       iface.mainWindow().displayToast("Kunne ikke sette målestokk")
