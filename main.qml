@@ -9,9 +9,17 @@ Item {
   // Styrer om målestokkboksen vises eller skjules
   property bool scaleBoxVisible: true
 
-  // Felles padding rundt innholdet i målestokkboksen.
-  // Samme verdi brukes horisontalt og vertikalt for å gi lik marg på alle sider.
-  property int boxPadding: 6
+  // Egen horisontal og vertikal padding.
+  // Vertikal padding er litt mindre for å redusere "luft" over og under teksten.
+  property int boxPaddingX: 6
+  property int boxPaddingY: 3
+
+  // Felles stilverdier slik at målestokkboks og toggle-knapp ser ut som samme UI-familie
+  property color panelColor: Theme.white
+  property color panelBorderColor: Theme.mainColor
+  property real panelOpacity: 0.7
+  property int panelRadius: 4
+  property int panelBorderWidth: 1
 
   // Henter gjeldende målestokk fra kartet
   function currentScale() {
@@ -78,18 +86,17 @@ Item {
       horizontalCenter: parent.horizontalCenter
     }
 
-    // Lik padding på alle sider:
-    // + 2 * boxPadding gir samme luft venstre/høyre og oppe/nede
-    width: scaleRow.implicitWidth + (boxPadding * 2)
-    height: scaleRow.implicitHeight + (boxPadding * 2)
+    // Litt mer plass sideveis enn vertikalt gir et mer balansert uttrykk
+    width: scaleRow.implicitWidth + (boxPaddingX * 2)
+    height: scaleRow.implicitHeight + (boxPaddingY * 2)
 
-    color: Theme.white
-    opacity: 0.7
-    radius: 4
+    color: panelColor
+    opacity: panelOpacity
+    radius: panelRadius
 
     border {
-      color: Theme.mainColor
-      width: 1
+      color: panelBorderColor
+      width: panelBorderWidth
     }
 
     Row {
@@ -114,7 +121,9 @@ Item {
 
         // Auto-bredde etter antall sifre
         width: Math.max(36, contentWidth + 4)
-        height: 30
+
+        // Litt lavere høyde enn før for å redusere totalhøyden på boksen
+        height: 26
 
         font.pixelSize: 18
         font.bold: true
@@ -135,7 +144,7 @@ Item {
         topPadding: 0
         bottomPadding: 0
 
-        // Gjør at tekstfeltet visuelt blir en del av samme boks
+        // Ingen egen synlig feltboks
         background: Rectangle {
           color: "transparent"
           border.width: 0
@@ -156,7 +165,7 @@ Item {
       }
     }
 
-    // Oppdaterer feltet automatisk hvis brukeren zoomer på andre måter
+    // Oppdaterer feltet automatisk dersom brukeren zoomer på andre måter
     Connections {
       target: iface.mapCanvas().mapSettings
 
@@ -168,7 +177,8 @@ Item {
     }
   }
 
-  // Knapp øverst til høyre for å vise/skjule målestokkboksen
+  // Knapp øverst til høyre for å vise/skjule målestokkboksen.
+  // Den bruker samme stil som målestokkboksen for å fremstå som en del av samme UI.
   Rectangle {
     id: toggleButton
 
@@ -179,16 +189,17 @@ Item {
       rightMargin: 68
     }
 
+    // Samme høyde og stil som målestokkboksen gir et mer helhetlig uttrykk
     width: 42
-    height: 28
-    radius: 4
+    height: scaleBackground.height
+    radius: panelRadius
 
-    color: Theme.white
-    opacity: 0.7
+    color: panelColor
+    opacity: panelOpacity
 
     border {
-      color: Theme.mainColor
-      width: 1
+      color: panelBorderColor
+      width: panelBorderWidth
     }
 
     Text {
@@ -199,7 +210,7 @@ Item {
       color: scaleBoxVisible ? "black" : "gray"
     }
 
-    // Grå skråstrek når boksen er skjult
+    // Grå skråstrek når målestokkboksen er skjult
     Rectangle {
       visible: !scaleBoxVisible
       anchors.centerIn: parent
