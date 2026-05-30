@@ -101,53 +101,29 @@ Item {
             inputMethodHints: Qt.ImhDigitsOnly
             selectByMouse: true
             
-            // DEBUG: Skriv ut når noe skjer
-            onTextChanged: {
-              console.log("TextInput changed: " + text)
-            }
-            
-            onEditingFinished: {
-              console.log("onEditingFinished triggered with value: " + text)
-              applyScale()
-            }
+            onEditingFinished: applyScale()
             
             Keys.onReturnPressed: {
-              console.log("Return pressed with value: " + text)
               applyScale()
               event.accepted = true
               focus = false
             }
             
             Keys.onEnterPressed: {
-              console.log("Enter pressed with value: " + text)
               applyScale()
               event.accepted = true
               focus = false
             }
             
             function applyScale() {
-              console.log("applyScale() called")
-              console.log("Text value: " + text)
-              console.log("iface available: " + (typeof iface !== 'undefined'))
-              console.log("mapCanvas available: " + (iface && typeof iface.mapCanvas !== 'undefined'))
-              
               if (text !== "" && text !== "0") {
                 var newScale = parseFloat(text)
-                console.log("Parsed scale: " + newScale)
                 
                 if (newScale > 0) {
-                  console.log("Setting scale to: " + newScale)
+                  // Bruk zoomToScale() istedenfor å sette scale direkte
+                  iface.mapCanvas().zoomToScale(newScale)
                   
-                  try {
-                    iface.mapCanvas().mapSettings.scale = newScale
-                    console.log("Scale property set successfully")
-                  } catch (e) {
-                    console.log("ERROR setting scale: " + e)
-                  }
-                  
-                  scaleTextLabel.text = formatScale(newScale)
-                  iface.mainWindow().displayToast('Scale set to 1:' + newScale)
-                  console.log("Toast message sent")
+                  iface.mainWindow().displayToast('Skala satt til 1:' + newScale)
                 }
               }
             }
@@ -158,20 +134,7 @@ Item {
   }
 
   Component.onCompleted: {
-    console.log("=== Scale Ratio Display LOADING ===")
-    console.log("iface type: " + typeof iface)
-    console.log("iface.mapCanvas type: " + typeof iface.mapCanvas)
-    
-    try {
-      var canvas = iface.mapCanvas()
-      console.log("mapCanvas retrieved successfully")
-      console.log("mapSettings.scale: " + canvas.mapSettings.scale)
-    } catch (e) {
-      console.log("ERROR accessing mapCanvas: " + e)
-    }
-    
     iface.mainWindow().contentItem.children.push(scaleBackground)
     iface.mainWindow().displayToast('Scale Ratio Display plugin loaded')
-    console.log("=== Scale Ratio Display LOADED ===")
   }
 }
