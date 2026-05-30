@@ -10,7 +10,7 @@ Item {
   property bool scaleBoxVisible: true
 
   // Horisontal og vertikal luft inne i målestokkboksen
-  property int boxPaddingX: 4
+  property int boxPaddingX: 5
   property int boxPaddingY: 2
 
   // Henter gjeldende målestokk fra kartet
@@ -78,7 +78,7 @@ Item {
     height: scaleRow.height + (boxPaddingY * 2)
 
     color: Theme.white
-    opacity: 0.7
+    opacity: 0.6
     radius: 4
 
     border {
@@ -160,14 +160,14 @@ Item {
       top: parent.top
       topMargin: 10
       right: parent.right
-      rightMargin: 68
+      rightMargin: 65
     }
 
     width: 42
     height: scaleBackground.height
 
     color: Theme.white
-    opacity: 0.7
+    opacity: 0.6
     radius: 4
 
     border {
