@@ -14,7 +14,7 @@ https://docs.qfield.org/how-to/advanced-how-tos/plugins/?h=plugin#application-pl
 
 QField > Settings, scroll down to User Interface and Manage plugins, click on the three dots and click on Install plugin from URL.
 
-1. Copy/type in `https://github.com/9ls1/qfield-scale-ratio-display/releases/download/v1.0/qfield-scale-ratio-display-v1.0.zip` or
+1. Copy/type in `https://github.com/9ls1/qfield-scale-ratio-display/releases/download/v2.0/qfield-scale-ratio-display-v2.0.zip` or
 2. Click on the QR-code-icon to activate camera and take a picture of this QR-code
 <img width="320" height="320" alt="qr-code-url-v1 0 png" src="https://github.com/user-attachments/assets/edf3c751-1635-44da-b548-af7066783dd3" />
 
