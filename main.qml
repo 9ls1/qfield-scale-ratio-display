@@ -6,15 +6,12 @@ import Theme
 Item {
   id: scaleRatioDisplay
 
-  // Returnerer gjeldende målestokk som tall
+  property bool scaleBoxVisible: true
+
   function currentScale() {
     return iface.mapCanvas().mapSettings.scale
   }
 
-  // Formaterer tall slik at vi får:
-  // 9876  -> "9876"
-  // 10000 -> "10 000"
-  // 16789 -> "16 789"
   function formatScaleNumber(value) {
     var rounded = Math.round(value)
     if (rounded >= 10000) {
@@ -23,12 +20,10 @@ Item {
     return rounded.toString()
   }
 
-  // Fjerner mellomrom fra tekstfeltet før vi tolker tallet
   function unformatScaleNumber(text) {
     return text.replace(/\s/g, "")
   }
 
-  // Setter ny målestokk når brukeren taster inn et tall
   function applyScale() {
     var rawText = unformatScaleNumber(scaleField.text)
 
@@ -48,8 +43,6 @@ Item {
 
     try {
       canvas.mapCanvasWrapper.zoomScale(center, newScale, false)
-
-      // Vis formattert verdi etter at redigeringen er ferdig
       scaleField.text = formatScaleNumber(newScale)
       scaleField.focus = false
     } catch (e) {
@@ -59,7 +52,42 @@ Item {
   }
 
   Rectangle {
+    id: toggleButton
+
+    anchors {
+      top: parent.top
+      topMargin: 10
+      right: parent.right
+      rightMargin: 10
+    }
+
+    width: 36
+    height: 36
+    radius: 4
+    color: Theme.white
+    opacity: 0.8
+    border.color: Theme.mainColor
+    border.width: 1
+
+    Text {
+      anchors.centerIn: parent
+      text: scaleBoxVisible ? "–" : "+"
+      font.pixelSize: 22
+      font.bold: true
+      color: Theme.mainColor
+    }
+
+    MouseArea {
+      anchors.fill: parent
+      onClicked: {
+        scaleBoxVisible = !scaleBoxVisible
+      }
+    }
+  }
+
+  Rectangle {
     id: scaleBackground
+    visible: scaleBoxVisible
 
     anchors {
       top: parent.top
@@ -103,8 +131,6 @@ Item {
         font.pixelSize: 18
         font.bold: true
         color: Theme.textColor
-
-        // Startverdi vises formattert
         text: formatScaleNumber(currentScale())
 
         inputMethodHints: Qt.ImhDigitsOnly
@@ -121,7 +147,6 @@ Item {
           border.width: 0
         }
 
-        // Når feltet får fokus, vis rått tall uten mellomrom
         onActiveFocusChanged: {
           if (activeFocus) {
             scaleField.text = Math.round(currentScale()).toString()
@@ -135,7 +160,6 @@ Item {
       }
     }
 
-    // Oppdater feltet automatisk når kartet zoomes på andre måter
     Connections {
       target: iface.mapCanvas().mapSettings
 
@@ -149,5 +173,6 @@ Item {
 
   Component.onCompleted: {
     iface.mainWindow().contentItem.children.push(scaleBackground)
+    iface.mainWindow().contentItem.children.push(toggleButton)
   }
 }
