@@ -116,27 +116,31 @@ Item {
             }
             
             function applyScale() {
-              console.log("=== DEBUG: applyScale called ===")
-              console.log("Text: " + text)
-              
               if (text !== "" && text !== "0") {
                 var newScale = parseFloat(text)
-                console.log("Parsed scale: " + newScale)
                 
                 if (newScale > 0) {
+                  console.log("Attempting to zoom to scale: " + newScale)
+                  
                   var mapCanvas = iface.mapCanvas()
-                  console.log("Available mapCanvas methods:")
-                  for (var prop in mapCanvas) {
-                    if (typeof mapCanvas[prop] === 'function') {
-                      console.log("  Function: " + prop)
+                  var mapSettings = mapCanvas.mapSettings
+                  
+                  // Hent nåværende extent (område som vises)
+                  var currentExtent = mapSettings.extent
+                  console.log("Current extent: " + JSON.stringify(currentExtent))
+                  console.log("Available properties: " + Object.keys(mapSettings))
+                  
+                  // Prøv å finne zoom-relaterte metoder
+                  try {
+                    if (typeof mapCanvas.mapCanvasWrapper !== 'undefined') {
+                      console.log("mapCanvasWrapper found")
+                      mapCanvas.mapCanvasWrapper.zoomWithFactor(newScale / mapSettings.scale)
                     }
+                  } catch (e) {
+                    console.log("Error with mapCanvasWrapper: " + e)
                   }
                   
-                  var mapSettings = mapCanvas.mapSettings
-                  console.log("Available mapSettings properties:")
-                  for (var prop in mapSettings) {
-                    console.log("  " + prop)
-                  }
+                  iface.mainWindow().displayToast('Prøver å zoome til 1:' + newScale)
                 }
               }
             }
@@ -147,6 +151,18 @@ Item {
   }
 
   Component.onCompleted: {
+    console.log("=== Inspecting mapCanvas properties ===")
+    var canvas = iface.mapCanvas()
+    console.log("mapCanvas methods/properties:")
+    for (var key in canvas) {
+      console.log("  - " + key)
+    }
+    
+    console.log("mapSettings methods/properties:")
+    for (var key in canvas.mapSettings) {
+      console.log("  - " + key)
+    }
+    
     iface.mainWindow().contentItem.children.push(scaleBackground)
     iface.mainWindow().displayToast('Scale Ratio Display plugin loaded')
   }
