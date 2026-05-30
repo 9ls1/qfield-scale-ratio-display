@@ -58,9 +58,10 @@ Item {
     Row {
       id: scaleRow
       anchors.centerIn: parent
-      spacing: 1
+      spacing: 2
 
       Text {
+        id: scalePrefix
         anchors.verticalCenter: parent.verticalCenter
         font.pixelSize: 18
         font.bold: true
@@ -71,7 +72,8 @@ Item {
       TextField {
         id: scaleField
         anchors.verticalCenter: parent.verticalCenter
-        width: 72
+
+        width: Math.max(36, contentWidth + 4)
         height: 30
 
         font.pixelSize: 18
@@ -79,6 +81,7 @@ Item {
         text: Math.round(currentScale()).toString()
         inputMethodHints: Qt.ImhDigitsOnly
         selectByMouse: true
+        horizontalAlignment: TextInput.AlignRight
 
         leftPadding: 0
         rightPadding: 0
