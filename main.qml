@@ -10,15 +10,14 @@ Item {
   property bool scaleBoxVisible: true
 
   // Egen horisontal og vertikal padding.
-  // Vertikal padding er litt mindre for å redusere "luft" over og under teksten.
+  // Litt mindre vertikal padding gjør boksen mindre "luftig" oppe og nede.
   property int boxPaddingX: 6
   property int boxPaddingY: 3
 
-  // Felles stilverdier slik at målestokkboks og toggle-knapp ser ut som samme UI-familie.
-  // Viktig: bruk semi-transparent bakgrunnsfarge i stedet for opacity på hele boksen,
-  // slik at tekst og kantlinjer forblir tydelige.
-  property color panelBackgroundColor: Qt.rgba(1, 1, 1, 0.7)
+  // Felles stilverdier for både målestokkboks og toggle-knapp
+  property color panelColor: Theme.white
   property color panelBorderColor: Theme.mainColor
+  property real panelOpacity: 0.7
   property int panelRadius: 4
   property int panelBorderWidth: 1
 
@@ -44,7 +43,7 @@ Item {
     return text.replace(/\s/g, "")
   }
 
-  // Setter ny målestokk ut fra verdien i tekstfeltet
+  // Setter ny målestokk basert på tallet brukeren skriver inn
   function applyScale() {
     var rawText = unformatScaleNumber(scaleField.text)
 
@@ -61,14 +60,13 @@ Item {
     var mapSettings = canvas.mapSettings
     var extent = mapSettings.extent
 
-    // I QField/QML er center en property, ikke en funksjon
+    // I QField/QML er center en property
     var center = extent.center
 
     try {
-      // Zoomer til ønsket målestokk
       canvas.mapCanvasWrapper.zoomScale(center, newScale, false)
 
-      // Vis formattert verdi etter at målestokken er satt
+      // Etter endring viser vi tallet formattert igjen
       scaleField.text = formatScaleNumber(newScale)
       scaleField.focus = false
     } catch (e) {
@@ -77,7 +75,7 @@ Item {
     }
   }
 
-  // Selve målestokkboksen
+  // Målestokkboksen midt øverst
   Rectangle {
     id: scaleBackground
     visible: scaleBoxVisible
@@ -88,11 +86,12 @@ Item {
       horizontalCenter: parent.horizontalCenter
     }
 
-    // Litt mer plass sideveis enn vertikalt gir et mer balansert uttrykk
+    // Litt mer sidepadding enn topp/bunn gir et mer balansert uttrykk
     width: scaleRow.implicitWidth + (boxPaddingX * 2)
     height: scaleRow.implicitHeight + (boxPaddingY * 2)
 
-    color: panelBackgroundColor
+    color: panelColor
+    opacity: panelOpacity
     radius: panelRadius
 
     border {
@@ -105,7 +104,6 @@ Item {
       anchors.centerIn: parent
       spacing: 2
 
-      // Fast prefiks
       Text {
         id: scalePrefix
         anchors.verticalCenter: parent.verticalCenter
@@ -115,43 +113,39 @@ Item {
         text: "1 :"
       }
 
-      // Redigerbart målestokkstall
       TextField {
         id: scaleField
         anchors.verticalCenter: parent.verticalCenter
 
-        // Auto-bredde etter antall sifre
+        // Bredde følger antall sifre
         width: Math.max(36, contentWidth + 4)
 
-        // Litt lavere høyde enn standard for å redusere totalhøyden på boksen
+        // Litt lavere felt for å redusere luft oppe og nede
         height: 26
 
         font.pixelSize: 18
         font.bold: true
         color: Theme.textColor
-
-        // Startverdi vises formattert
         text: formatScaleNumber(currentScale())
 
         inputMethodHints: Qt.ImhDigitsOnly
         selectByMouse: true
-
-        // Høyrestilt tekst gjør at tallet legger seg pent tett inntil "1 :"
         horizontalAlignment: TextInput.AlignRight
 
-        // Fjerner intern padding for å få et strammere uttrykk
+        // Fjern intern padding for et kompakt uttrykk
         leftPadding: 0
         rightPadding: 0
         topPadding: 0
         bottomPadding: 0
 
-        // Ingen egen synlig feltboks
+        // Ingen ekstra feltbakgrunn
         background: Rectangle {
           color: "transparent"
           border.width: 0
         }
 
-        // Når feltet får fokus, vis rått tall uten mellomrom
+        // Ved fokus: vis rått tall uten mellomrom
+        // Når fokus forsvinner: bruk verdien og formatter på nytt
         onActiveFocusChanged: {
           if (activeFocus) {
             scaleField.text = Math.round(currentScale()).toString()
@@ -161,12 +155,11 @@ Item {
           }
         }
 
-        // Enter/OK setter ny målestokk
         onAccepted: applyScale()
       }
     }
 
-    // Oppdaterer feltet automatisk dersom brukeren zoomer på andre måter
+    // Oppdater visningen automatisk hvis kartet zoomes på andre måter
     Connections {
       target: iface.mapCanvas().mapSettings
 
@@ -178,8 +171,7 @@ Item {
     }
   }
 
-  // Knapp øverst til høyre for å vise/skjule målestokkboksen.
-  // Samme høyde og visuelle stil som målestokkboksen gir et mer helhetlig uttrykk.
+  // Toggle-knapp øverst til høyre
   Rectangle {
     id: toggleButton
 
@@ -194,7 +186,8 @@ Item {
     height: scaleBackground.height
     radius: panelRadius
 
-    color: panelBackgroundColor
+    color: panelColor
+    opacity: panelOpacity
 
     border {
       color: panelBorderColor
@@ -209,7 +202,7 @@ Item {
       color: scaleBoxVisible ? "black" : "gray"
     }
 
-    // Grå skråstrek når målestokkboksen er skjult
+    // Skråstrek når målestokkboksen er skjult
     Rectangle {
       visible: !scaleBoxVisible
       anchors.centerIn: parent
@@ -229,7 +222,7 @@ Item {
   }
 
   Component.onCompleted: {
-    // Legger komponentene inn i hovedvinduet
+    // Legg komponentene inn i QField-vinduet
     iface.mainWindow().contentItem.children.push(scaleBackground)
     iface.mainWindow().contentItem.children.push(toggleButton)
   }
