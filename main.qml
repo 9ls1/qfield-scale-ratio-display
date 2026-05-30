@@ -103,6 +103,7 @@ Item {
             color: Theme.textColor
             text: Math.round(iface.mapCanvas().mapSettings.scale).toString()
             inputMethodHints: Qt.ImhDigitsOnly
+            selectByMouse: true
             
             onEditingFinished: applyScale()
             
@@ -120,8 +121,18 @@ Item {
               if (text !== "" && text !== "0") {
                 var newScale = parseFloat(text)
                 if (newScale > 0) {
+                  // Get map center point
+                  var mapCenter = iface.mapCanvas().mapSettings.center
+                  var screenCenter = Qt.point(
+                    iface.mapCanvas().width / 2,
+                    iface.mapCanvas().height / 2
+                  )
+                  
+                  // Use zoomScale to apply the new scale
                   iface.mapCanvas().mapSettings.scale = newScale
                   scaleTextLabel.text = formatScale(newScale)
+                  
+                  iface.mainWindow().displayToast('Scale set to 1:' + newScale)
                 }
               }
             }
