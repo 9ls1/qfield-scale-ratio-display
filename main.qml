@@ -120,10 +120,27 @@ Item {
                 var newScale = parseFloat(text)
                 
                 if (newScale > 0) {
-                  // Bruk zoomToScale() istedenfor å sette scale direkte
-                  iface.mapCanvas().zoomToScale(newScale)
+                  console.log("Attempting to zoom to scale: " + newScale)
                   
-                  iface.mainWindow().displayToast('Skala satt til 1:' + newScale)
+                  var mapCanvas = iface.mapCanvas()
+                  var mapSettings = mapCanvas.mapSettings
+                  
+                  // Hent nåværende extent (område som vises)
+                  var currentExtent = mapSettings.extent
+                  console.log("Current extent: " + JSON.stringify(currentExtent))
+                  console.log("Available properties: " + Object.keys(mapSettings))
+                  
+                  // Prøv å finne zoom-relaterte metoder
+                  try {
+                    if (typeof mapCanvas.mapCanvasWrapper !== 'undefined') {
+                      console.log("mapCanvasWrapper found")
+                      mapCanvas.mapCanvasWrapper.zoomWithFactor(newScale / mapSettings.scale)
+                    }
+                  } catch (e) {
+                    console.log("Error with mapCanvasWrapper: " + e)
+                  }
+                  
+                  iface.mainWindow().displayToast('Prøver å zoome til 1:' + newScale)
                 }
               }
             }
@@ -134,6 +151,18 @@ Item {
   }
 
   Component.onCompleted: {
+    console.log("=== Inspecting mapCanvas properties ===")
+    var canvas = iface.mapCanvas()
+    console.log("mapCanvas methods/properties:")
+    for (var key in canvas) {
+      console.log("  - " + key)
+    }
+    
+    console.log("mapSettings methods/properties:")
+    for (var key in canvas.mapSettings) {
+      console.log("  - " + key)
+    }
+    
     iface.mainWindow().contentItem.children.push(scaleBackground)
     iface.mainWindow().displayToast('Scale Ratio Display plugin loaded')
   }
