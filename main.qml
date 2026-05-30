@@ -61,10 +61,6 @@ Item {
           function onScaleChanged() {
             scaleTextLabel.text = formatScale(iface.mapCanvas().mapSettings.scale)
           }
-          
-          function onMapSettingsChanged() {
-            scaleTextLabel.text = formatScale(iface.mapCanvas().mapSettings.scale)
-          }
         }
       }
 
@@ -105,34 +101,53 @@ Item {
             inputMethodHints: Qt.ImhDigitsOnly
             selectByMouse: true
             
-            onEditingFinished: applyScale()
+            // DEBUG: Skriv ut når noe skjer
+            onTextChanged: {
+              console.log("TextInput changed: " + text)
+            }
+            
+            onEditingFinished: {
+              console.log("onEditingFinished triggered with value: " + text)
+              applyScale()
+            }
             
             Keys.onReturnPressed: {
+              console.log("Return pressed with value: " + text)
               applyScale()
+              event.accepted = true
               focus = false
             }
             
             Keys.onEnterPressed: {
+              console.log("Enter pressed with value: " + text)
               applyScale()
+              event.accepted = true
               focus = false
             }
             
             function applyScale() {
+              console.log("applyScale() called")
+              console.log("Text value: " + text)
+              console.log("iface available: " + (typeof iface !== 'undefined'))
+              console.log("mapCanvas available: " + (iface && typeof iface.mapCanvas !== 'undefined'))
+              
               if (text !== "" && text !== "0") {
                 var newScale = parseFloat(text)
+                console.log("Parsed scale: " + newScale)
+                
                 if (newScale > 0) {
-                  // Get map center point
-                  var mapCenter = iface.mapCanvas().mapSettings.center
-                  var screenCenter = Qt.point(
-                    iface.mapCanvas().width / 2,
-                    iface.mapCanvas().height / 2
-                  )
+                  console.log("Setting scale to: " + newScale)
                   
-                  // Use zoomScale to apply the new scale
-                  iface.mapCanvas().mapSettings.scale = newScale
+                  try {
+                    iface.mapCanvas().mapSettings.scale = newScale
+                    console.log("Scale property set successfully")
+                  } catch (e) {
+                    console.log("ERROR setting scale: " + e)
+                  }
+                  
                   scaleTextLabel.text = formatScale(newScale)
-                  
                   iface.mainWindow().displayToast('Scale set to 1:' + newScale)
+                  console.log("Toast message sent")
                 }
               }
             }
@@ -143,7 +158,20 @@ Item {
   }
 
   Component.onCompleted: {
+    console.log("=== Scale Ratio Display LOADING ===")
+    console.log("iface type: " + typeof iface)
+    console.log("iface.mapCanvas type: " + typeof iface.mapCanvas)
+    
+    try {
+      var canvas = iface.mapCanvas()
+      console.log("mapCanvas retrieved successfully")
+      console.log("mapSettings.scale: " + canvas.mapSettings.scale)
+    } catch (e) {
+      console.log("ERROR accessing mapCanvas: " + e)
+    }
+    
     iface.mainWindow().contentItem.children.push(scaleBackground)
     iface.mainWindow().displayToast('Scale Ratio Display plugin loaded')
+    console.log("=== Scale Ratio Display LOADED ===")
   }
 }
