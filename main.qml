@@ -9,26 +9,18 @@ Item {
   // Styrer om målestokkboksen vises eller skjules
   property bool scaleBoxVisible: true
 
-  // Egen horisontal og vertikal padding.
-  // Litt mindre vertikal padding gjør boksen mindre "luftig" oppe og nede.
-  property int boxPaddingX: 6
-  property int boxPaddingY: 3
-
-  // Felles stilverdier for både målestokkboks og toggle-knapp
-  property color panelBorderColor: Theme.mainColor
-  property real panelOpacity: 0.7
-  property int panelRadius: 4
-  property int panelBorderWidth: 1
+  // Horisontal og vertikal luft inne i målestokkboksen
+  property int boxPaddingX: 4
+  property int boxPaddingY: 2
 
   // Henter gjeldende målestokk fra kartet
   function currentScale() {
     return iface.mapCanvas().mapSettings.scale
   }
 
-  // Formaterer målestokkstall:
-  // 9876  -> "9876"
+  // Formaterer målestokkstallet:
+  // 9876 -> "9876"
   // 10000 -> "10 000"
-  // 16789 -> "16 789"
   function formatScaleNumber(value) {
     var rounded = Math.round(value)
     if (rounded >= 10000) {
@@ -37,12 +29,12 @@ Item {
     return rounded.toString()
   }
 
-  // Fjerner mellomrom før tallet tolkes
+  // Fjerner mellomrom ved innlesing av tekstfeltet
   function unformatScaleNumber(text) {
     return text.replace(/\s/g, "")
   }
 
-  // Setter ny målestokk basert på tallet brukeren skriver inn
+  // Setter ønsket målestokk
   function applyScale() {
     var rawText = unformatScaleNumber(scaleField.text)
 
@@ -56,16 +48,11 @@ Item {
     }
 
     var canvas = iface.mapCanvas()
-    var mapSettings = canvas.mapSettings
-    var extent = mapSettings.extent
-
-    // I QField/QML er center en property
+    var extent = canvas.mapSettings.extent
     var center = extent.center
 
     try {
       canvas.mapCanvasWrapper.zoomScale(center, newScale, false)
-
-      // Etter endring viser vi tallet formattert igjen
       scaleField.text = formatScaleNumber(newScale)
       scaleField.focus = false
     } catch (e) {
@@ -74,7 +61,7 @@ Item {
     }
   }
 
-  // Målestokkboksen midt øverst
+  // Målestokkboksen
   Rectangle {
     id: scaleBackground
     visible: scaleBoxVisible
@@ -85,17 +72,18 @@ Item {
       horizontalCenter: parent.horizontalCenter
     }
 
-    // Litt mer sidepadding enn topp/bunn gir et mer balansert uttrykk
-    width: scaleRow.implicitWidth + (boxPaddingX * 2)
-    height: scaleRow.implicitHeight + (boxPaddingY * 2)
+    // Samme enkle prinsipp som den fungerende gamle versjonen:
+    // størrelse basert direkte på innhold + liten fast luft
+    width: scaleRow.width + (boxPaddingX * 2)
+    height: scaleRow.height + (boxPaddingY * 2)
 
-    color: "white"
-    opacity: panelOpacity
-    radius: panelRadius
+    color: Theme.white
+    opacity: 0.7
+    radius: 4
 
     border {
-      color: panelBorderColor
-      width: panelBorderWidth
+      color: Theme.mainColor
+      width: 1
     }
 
     Row {
@@ -116,11 +104,8 @@ Item {
         id: scaleField
         anchors.verticalCenter: parent.verticalCenter
 
-        // Bredde følger antall sifre
         width: Math.max(36, contentWidth + 4)
-
-        // Litt lavere felt for å redusere luft oppe og nede
-        height: 26
+        height: 24
 
         font.pixelSize: 18
         font.bold: true
@@ -131,20 +116,17 @@ Item {
         selectByMouse: true
         horizontalAlignment: TextInput.AlignRight
 
-        // Fjern intern padding for et kompakt uttrykk
         leftPadding: 0
         rightPadding: 0
         topPadding: 0
         bottomPadding: 0
 
-        // Ingen ekstra feltbakgrunn
         background: Rectangle {
           color: "transparent"
           border.width: 0
         }
 
-        // Ved fokus: vis rått tall uten mellomrom
-        // Når fokus forsvinner: bruk verdien og formatter på nytt
+        // Ved redigering vises rått tall uten mellomrom
         onActiveFocusChanged: {
           if (activeFocus) {
             scaleField.text = Math.round(currentScale()).toString()
@@ -158,7 +140,7 @@ Item {
       }
     }
 
-    // Oppdater visningen automatisk hvis kartet zoomes på andre måter
+    // Oppdater målestokktallet automatisk ved annen zooming
     Connections {
       target: iface.mapCanvas().mapSettings
 
@@ -170,7 +152,7 @@ Item {
     }
   }
 
-  // Toggle-knapp øverst til høyre
+  // Toggle-knapp i øvre høyre hjørne
   Rectangle {
     id: toggleButton
 
@@ -183,14 +165,14 @@ Item {
 
     width: 42
     height: scaleBackground.height
-    radius: panelRadius
 
-    color: "white"
-    opacity: panelOpacity
+    color: Theme.white
+    opacity: 0.7
+    radius: 4
 
     border {
-      color: panelBorderColor
-      width: panelBorderWidth
+      color: Theme.mainColor
+      width: 1
     }
 
     Text {
@@ -201,11 +183,11 @@ Item {
       color: scaleBoxVisible ? "black" : "gray"
     }
 
-    // Skråstrek når målestokkboksen er skjult
+    // Skråstrek når boksen er skjult
     Rectangle {
       visible: !scaleBoxVisible
       anchors.centerIn: parent
-      width: 28
+      width: 24
       height: 2
       color: "gray"
       rotation: -30
@@ -214,16 +196,12 @@ Item {
 
     MouseArea {
       anchors.fill: parent
-      onClicked: {
-        scaleBoxVisible = !scaleBoxVisible
-      }
+      onClicked: scaleBoxVisible = !scaleBoxVisible
     }
   }
 
   Component.onCompleted: {
-    // Legg komponentene inn i QField-vinduet
     iface.mainWindow().contentItem.children.push(scaleBackground)
     iface.mainWindow().contentItem.children.push(toggleButton)
   }
-}
 }
