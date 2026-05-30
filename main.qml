@@ -21,18 +21,18 @@ Item {
   function applyScale() {
     if (scaleField.text === "" || scaleField.text === "0")
       return
-
+  
     var newScale = parseFloat(scaleField.text)
     if (isNaN(newScale) || newScale <= 0) {
       iface.mainWindow().displayToast("Ugyldig målestokk")
       return
     }
-
+  
     var canvas = iface.mapCanvas()
     var mapSettings = canvas.mapSettings
     var extent = mapSettings.extent
-    var center = extent.center()
-
+    var center = extent.center
+  
     try {
       canvas.mapCanvasWrapper.zoomScale(center, newScale, false)
       scaleField.focus = false
