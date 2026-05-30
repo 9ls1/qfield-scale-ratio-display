@@ -61,7 +61,6 @@ Item {
       spacing: 4
 
       Text {
-        id: scalePrefix
         anchors.verticalCenter: parent.verticalCenter
         font.pixelSize: 18
         font.bold: true
@@ -72,8 +71,7 @@ Item {
       TextField {
         id: scaleField
         anchors.verticalCenter: parent.verticalCenter
-
-        width: Math.max(90, contentWidth + 16)
+        width: 100
         height: 32
 
         font.pixelSize: 18
@@ -81,7 +79,6 @@ Item {
         text: Math.round(currentScale()).toString()
         inputMethodHints: Qt.ImhDigitsOnly
         selectByMouse: true
-        horizontalAlignment: TextInput.AlignLeft
 
         background: Rectangle {
           color: "transparent"
@@ -111,6 +108,5 @@ Item {
 
   Component.onCompleted: {
     iface.mainWindow().contentItem.children.push(scaleBackground)
-    iface.mainWindow().displayToast("Scale Ratio Display plugin loaded")
   }
 }
