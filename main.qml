@@ -8,7 +8,6 @@ import Theme
 // Bakgrunnsfarge: Endre color i Rectangle
 // Desimalplasser: Endre Math.round() til toFixed(1) for å vise f.eks. "1:500.5"
 
-
 Item {
   id: scaleRatioDisplay
 
@@ -33,8 +32,8 @@ Item {
       horizontalCenter: parent.horizontalCenter
     }
     
-    width: scaleTextLabel.width + 8
-    height: scaleTextLabel.height + 6
+    width: Math.max(scaleTextLabel.width, scaleInput.width) + 16
+    height: scaleTextLabel.height + scaleInput.height + 16
     
     color: Theme.white
     opacity: 0.7
@@ -44,31 +43,83 @@ Item {
       color: Theme.mainColor
       width: 1
     }
-    
-    Text {
-      id: scaleTextLabel
-      
+
+    Column {
       anchors {
         centerIn: parent
+        margins: 4
       }
-      
-      // font.pixelSize: Theme.hugeDefaultFontSize + 12
-	    font.pixelSize: 20
-      font.bold: true
-      color: Theme.textColor
-      
-      text: formatScale(iface.mapCanvas().mapSettings.scale)
-      
-      // Update scale text whenever map scale changes
-      Connections {
-        target: iface.mapCanvas()
+      spacing: 4
+
+      Text {
+        id: scaleTextLabel
         
-        function onScaleChanged() {
-          scaleTextLabel.text = formatScale(iface.mapCanvas().mapSettings.scale)
+        anchors.horizontalCenter: parent.horizontalCenter
+        
+        font.pixelSize: 20
+        font.bold: true
+        color: Theme.textColor
+        
+        text: formatScale(iface.mapCanvas().mapSettings.scale)
+        
+        // Update scale text whenever map scale changes
+        Connections {
+          target: iface.mapCanvas()
+          
+          function onScaleChanged() {
+            scaleTextLabel.text = formatScale(iface.mapCanvas().mapSettings.scale)
+          }
+          
+          function onMapSettingsChanged() {
+            scaleTextLabel.text = formatScale(iface.mapCanvas().mapSettings.scale)
+          }
         }
-        
-        function onMapSettingsChanged() {
-          scaleTextLabel.text = formatScale(iface.mapCanvas().mapSettings.scale)
+      }
+
+      Rectangle {
+        id: inputContainer
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: 150
+        height: 32
+        color: Theme.white
+        border.color: Theme.mainColor
+        border.width: 1
+        radius: 2
+
+        TextInput {
+          id: scaleInput
+          
+          anchors {
+            fill: parent
+            margins: 4
+          }
+          
+          font.pixelSize: 14
+          color: Theme.textColor
+          text: Math.round(iface.mapCanvas().mapSettings.scale).toString()
+          inputMethodHints: Qt.ImhDigitsOnly
+          
+          onEditingFinished: {
+            if (text !== "") {
+              var newScale = parseFloat(text)
+              if (newScale > 0) {
+                iface.mapCanvas().mapSettings.scale = newScale
+                scaleTextLabel.text = formatScale(newScale)
+              }
+            }
+          }
+        }
+
+        Text {
+          anchors {
+            right: parent.right
+            rightMargin: 8
+            verticalCenter: parent.verticalCenter
+          }
+          
+          font.pixelSize: 12
+          color: Theme.textColor
+          text: "1:"
         }
       }
     }
