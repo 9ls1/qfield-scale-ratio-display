@@ -6,60 +6,83 @@ import Theme
 Item {
   id: scaleRatioDisplay
 
+  function currentScale() {
+    return iface.mapCanvas().mapSettings.scale
+  }
+
   function formatScale(scale) {
     var roundedScale = Math.round(scale)
-    
     if (roundedScale > 9999) {
       return "1 : " + roundedScale.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
-    } else {
-      return "1 : " + roundedScale
+    }
+    return "1 : " + roundedScale
+  }
+
+  function applyScale() {
+    if (scaleInput.text === "" || scaleInput.text === "0")
+      return
+
+    var newScale = parseFloat(scaleInput.text)
+    if (isNaN(newScale) || newScale <= 0) {
+      iface.mainWindow().displayToast("Ugyldig målestokk")
+      return
+    }
+
+    var canvas = iface.mapCanvas()
+    var mapSettings = canvas.mapSettings
+    var extent = mapSettings.extent
+    var center = extent.center()
+
+    try {
+      canvas.mapCanvasWrapper.zoomScale(center, newScale, false)
+      scaleInput.focus = false
+    } catch (e) {
+      console.log("zoomScale failed: " + e)
+      iface.mainWindow().displayToast("Kunne ikke sette målestokk")
     }
   }
 
   Rectangle {
     id: scaleBackground
-    
+
     anchors {
       top: parent.top
       topMargin: 10
       horizontalCenter: parent.horizontalCenter
     }
-    
+
     width: Math.max(scaleTextLabel.width, inputContainer.width) + 16
     height: scaleTextLabel.height + inputContainer.height + 24
-    
+
     color: Theme.white
     opacity: 0.7
     radius: 4
-    
+
     border {
       color: Theme.mainColor
       width: 1
     }
 
     Column {
-      anchors {
-        centerIn: parent
-        margins: 8
-      }
+      anchors.centerIn: parent
       spacing: 8
 
       Text {
         id: scaleTextLabel
-        
         anchors.horizontalCenter: parent.horizontalCenter
-        
         font.pixelSize: 20
         font.bold: true
         color: Theme.textColor
-        
-        text: formatScale(iface.mapCanvas().mapSettings.scale)
-        
+        text: formatScale(currentScale())
+
         Connections {
-          target: iface.mapCanvas()
-          
-          function onScaleChanged() {
-            scaleTextLabel.text = formatScale(iface.mapCanvas().mapSettings.scale)
+          target: iface.mapCanvas().mapSettings
+
+          function onExtentChanged() {
+            scaleTextLabel.text = formatScale(currentScale())
+            if (!scaleField.activeFocus) {
+              scaleField.text = Math.round(currentScale()).toString()
+            }
           }
         }
       }
@@ -87,61 +110,23 @@ Item {
             width: 24
           }
 
-          TextInput {
-            id: scaleInput
-            
+          TextField {
+            id: scaleField
             anchors.verticalCenter: parent.verticalCenter
-            
             width: parent.width - 28
             height: parent.height
-            
+
             font.pixelSize: 14
             color: Theme.textColor
-            text: Math.round(iface.mapCanvas().mapSettings.scale).toString()
+            text: Math.round(currentScale()).toString()
             inputMethodHints: Qt.ImhDigitsOnly
             selectByMouse: true
-            
-            onEditingFinished: applyScale()
-            
-            Keys.onReturnPressed: {
-              applyScale()
-              event.accepted = true
-              focus = false
-            }
-            
-            Keys.onEnterPressed: {
-              applyScale()
-              event.accepted = true
-              focus = false
-            }
-            
-            function applyScale() {
-              if (text !== "" && text !== "0") {
-                var newScale = parseFloat(text)
-                
-                if (newScale > 0) {
-                  console.log("Attempting to zoom to scale: " + newScale)
-                  
-                  var mapCanvas = iface.mapCanvas()
-                  var mapSettings = mapCanvas.mapSettings
-                  
-                  // Hent nåværende extent (område som vises)
-                  var currentExtent = mapSettings.extent
-                  console.log("Current extent: " + JSON.stringify(currentExtent))
-                  console.log("Available properties: " + Object.keys(mapSettings))
-                  
-                  // Prøv å finne zoom-relaterte metoder
-                  try {
-                    if (typeof mapCanvas.mapCanvasWrapper !== 'undefined') {
-                      console.log("mapCanvasWrapper found")
-                      mapCanvas.mapCanvasWrapper.zoomWithFactor(newScale / mapSettings.scale)
-                    }
-                  } catch (e) {
-                    console.log("Error with mapCanvasWrapper: " + e)
-                  }
-                  
-                  iface.mainWindow().displayToast('Prøver å zoome til 1:' + newScale)
-                }
+
+            onAccepted: applyScale()
+
+            onActiveFocusChanged: {
+              if (!activeFocus) {
+                applyScale()
               }
             }
           }
@@ -151,19 +136,7 @@ Item {
   }
 
   Component.onCompleted: {
-    console.log("=== Inspecting mapCanvas properties ===")
-    var canvas = iface.mapCanvas()
-    console.log("mapCanvas methods/properties:")
-    for (var key in canvas) {
-      console.log("  - " + key)
-    }
-    
-    console.log("mapSettings methods/properties:")
-    for (var key in canvas.mapSettings) {
-      console.log("  - " + key)
-    }
-    
     iface.mainWindow().contentItem.children.push(scaleBackground)
-    iface.mainWindow().displayToast('Scale Ratio Display plugin loaded')
+    iface.mainWindow().displayToast("Scale Ratio Display plugin loaded")
   }
 }
