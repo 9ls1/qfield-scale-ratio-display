@@ -6,8 +6,12 @@ import Theme
 Item {
   id: scaleRatioDisplay
 
-  // Styrer om målestokkboksen vises
+  // Styrer om målestokkboksen vises eller skjules
   property bool scaleBoxVisible: true
+
+  // Felles padding rundt innholdet i målestokkboksen.
+  // Samme verdi brukes horisontalt og vertikalt for å gi lik marg på alle sider.
+  property int boxPadding: 6
 
   // Henter gjeldende målestokk fra kartet
   function currentScale() {
@@ -25,12 +29,12 @@ Item {
     return rounded.toString()
   }
 
-  // Fjerner mellomrom før parsing
+  // Fjerner mellomrom før tallet tolkes
   function unformatScaleNumber(text) {
     return text.replace(/\s/g, "")
   }
 
-  // Setter ny målestokk
+  // Setter ny målestokk ut fra verdien i tekstfeltet
   function applyScale() {
     var rawText = unformatScaleNumber(scaleField.text)
 
@@ -46,10 +50,15 @@ Item {
     var canvas = iface.mapCanvas()
     var mapSettings = canvas.mapSettings
     var extent = mapSettings.extent
+
+    // I QField/QML er center en property, ikke en funksjon
     var center = extent.center
 
     try {
+      // Zoomer til ønsket målestokk
       canvas.mapCanvasWrapper.zoomScale(center, newScale, false)
+
+      // Vis formattert verdi etter at målestokken er satt
       scaleField.text = formatScaleNumber(newScale)
       scaleField.focus = false
     } catch (e) {
@@ -69,8 +78,10 @@ Item {
       horizontalCenter: parent.horizontalCenter
     }
 
-    width: scaleRow.implicitWidth + 12
-    height: scaleRow.implicitHeight + 10
+    // Lik padding på alle sider:
+    // + 2 * boxPadding gir samme luft venstre/høyre og oppe/nede
+    width: scaleRow.implicitWidth + (boxPadding * 2)
+    height: scaleRow.implicitHeight + (boxPadding * 2)
 
     color: Theme.white
     opacity: 0.7
@@ -86,6 +97,7 @@ Item {
       anchors.centerIn: parent
       spacing: 2
 
+      // Fast prefiks
       Text {
         id: scalePrefix
         anchors.verticalCenter: parent.verticalCenter
@@ -95,32 +107,41 @@ Item {
         text: "1 :"
       }
 
+      // Redigerbart målestokkstall
       TextField {
         id: scaleField
         anchors.verticalCenter: parent.verticalCenter
 
+        // Auto-bredde etter antall sifre
         width: Math.max(36, contentWidth + 4)
         height: 30
 
         font.pixelSize: 18
         font.bold: true
         color: Theme.textColor
+
+        // Startverdi vises formattert
         text: formatScaleNumber(currentScale())
 
         inputMethodHints: Qt.ImhDigitsOnly
         selectByMouse: true
+
+        // Høyrestilt tekst gjør at tallet legger seg pent tett inntil "1 :"
         horizontalAlignment: TextInput.AlignRight
 
+        // Fjerner intern padding for å få et strammere uttrykk
         leftPadding: 0
         rightPadding: 0
         topPadding: 0
         bottomPadding: 0
 
+        // Gjør at tekstfeltet visuelt blir en del av samme boks
         background: Rectangle {
           color: "transparent"
           border.width: 0
         }
 
+        // Når feltet får fokus, vis rått tall uten mellomrom
         onActiveFocusChanged: {
           if (activeFocus) {
             scaleField.text = Math.round(currentScale()).toString()
@@ -130,10 +151,12 @@ Item {
           }
         }
 
+        // Enter/OK setter ny målestokk
         onAccepted: applyScale()
       }
     }
 
+    // Oppdaterer feltet automatisk hvis brukeren zoomer på andre måter
     Connections {
       target: iface.mapCanvas().mapSettings
 
@@ -145,7 +168,7 @@ Item {
     }
   }
 
-  // Toggle-knapp øverst til høyre
+  // Knapp øverst til høyre for å vise/skjule målestokkboksen
   Rectangle {
     id: toggleButton
 
@@ -176,7 +199,7 @@ Item {
       color: scaleBoxVisible ? "black" : "gray"
     }
 
-    // Skråstrek over teksten når boksen er skjult
+    // Grå skråstrek når boksen er skjult
     Rectangle {
       visible: !scaleBoxVisible
       anchors.centerIn: parent
@@ -196,6 +219,7 @@ Item {
   }
 
   Component.onCompleted: {
+    // Legger komponentene inn i hovedvinduet
     iface.mainWindow().contentItem.children.push(scaleBackground)
     iface.mainWindow().contentItem.children.push(toggleButton)
   }
