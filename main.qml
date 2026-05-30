@@ -43,8 +43,8 @@ Item {
       horizontalCenter: parent.horizontalCenter
     }
 
-    width: scaleRow.implicitWidth + 16
-    height: scaleRow.implicitHeight + 12
+    width: scaleRow.implicitWidth + 12
+    height: scaleRow.implicitHeight + 10
 
     color: Theme.white
     opacity: 0.7
@@ -58,27 +58,32 @@ Item {
     Row {
       id: scaleRow
       anchors.centerIn: parent
-      spacing: 4
+      spacing: 1
 
       Text {
         anchors.verticalCenter: parent.verticalCenter
         font.pixelSize: 18
         font.bold: true
         color: Theme.textColor
-        text: "1:"
+        text: "1 :"
       }
 
       TextField {
         id: scaleField
         anchors.verticalCenter: parent.verticalCenter
-        width: 100
-        height: 32
+        width: 72
+        height: 30
 
         font.pixelSize: 18
         color: Theme.textColor
         text: Math.round(currentScale()).toString()
         inputMethodHints: Qt.ImhDigitsOnly
         selectByMouse: true
+
+        leftPadding: 0
+        rightPadding: 0
+        topPadding: 0
+        bottomPadding: 0
 
         background: Rectangle {
           color: "transparent"
