@@ -17,4 +17,4 @@ QField > Settings, scroll down to User Interface and Manage plugins, click on th
 
 1. Copy/type in `https://github.com/9ls1/qfield-scale-ratio-display/releases/download/v2.0/qfield-scale-ratio-display-v3.0.zip` or
 2. Click on the QR-code-icon to activate camera and take a picture of this QR-code\
-<img width="320" height="320" alt="qr-code-url-v2 0" src="https://github.com/user-attachments/assets/6943cef4-92e0-46c0-9518-fd9e6c1f5ab4" />
+<img width="320" height="320" alt="qr-code-url-v3 0" src="https://github.com/user-attachments/assets/5b101e87-2b3b-4cf5-9d99-63e774720455" />
