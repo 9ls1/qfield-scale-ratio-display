@@ -1,72 +1,102 @@
 import QtQuick
 import QtQuick.Controls
 import org.qfield
-import org.qgis
 import Theme
 
 Item {
   id: plugin
 
   property var mainWindow: iface.mainWindow()
-  property bool projectUiVisible: false
+  property string debugText: "Starter diagnose ..."
 
-  function hasOpenProject() {
+  function probeValue(label, getter) {
     try {
-      if (!ProjectUtils || !ProjectUtils.project)
-        return false
-
-      var fn = ProjectUtils.project.fileName
-      if (fn === undefined || fn === null)
-        return false
-
-      return fn.toString().length > 0
+      var value = getter()
+      if (value === undefined)
+        return label + ": undefined"
+      if (value === null)
+        return label + ": null"
+      return label + ": " + value.toString()
     } catch (e) {
-      console.log("hasOpenProject failed: " + e)
-      return false
+      return label + ": ERROR -> " + e
     }
   }
 
-  function refreshVisibility() {
-    projectUiVisible = hasOpenProject()
-    console.log("projectUiVisible = " + projectUiVisible)
+  function refreshDebug() {
+    var lines = []
+
+    lines.push(probeValue("iface", function() { return iface }))
+    lines.push(probeValue("mainWindow", function() { return iface.mainWindow() }))
+    lines.push(probeValue("mainWindow.contentItem", function() { return iface.mainWindow().contentItem }))
+    lines.push(probeValue("mapCanvas", function() { return iface.mapCanvas() }))
+    lines.push(probeValue("mapSettings", function() { return iface.mapCanvas().mapSettings }))
+    lines.push(probeValue("scale", function() { return iface.mapCanvas().mapSettings.scale }))
+    lines.push(probeValue("extent.width", function() { return iface.mapCanvas().mapSettings.extent.width }))
+    lines.push(probeValue("extent.height", function() { return iface.mapCanvas().mapSettings.extent.height }))
+    lines.push(probeValue("mapCanvasWrapper", function() { return iface.mapCanvas().mapCanvasWrapper }))
+
+    debugText = lines.join("\n")
+    console.log(debugText)
   }
 
   Timer {
-    interval: 500
+    interval: 1000
     repeat: true
     running: true
-    onTriggered: plugin.refreshVisibility()
+    onTriggered: plugin.refreshDebug()
   }
 
-  Component.onCompleted: refreshVisibility()
+  Component.onCompleted: refreshDebug()
 
   Item {
     id: overlayRoot
     parent: plugin.mainWindow ? plugin.mainWindow.contentItem : null
     anchors.fill: parent
-    visible: plugin.projectUiVisible
 
     Rectangle {
       anchors {
         top: parent.top
         topMargin: 12
-        horizontalCenter: parent.horizontalCenter
+        left: parent.left
+        leftMargin: 12
       }
 
-      width: 140
-      height: 36
+      width: Math.min(parent.width - 24, 700)
+      height: 220
       radius: 6
-      color: "#d9f7be"
-      border.color: "green"
+      color: "white"
+      opacity: 0.92
+      border.color: Theme.mainColor
       border.width: 1
-      opacity: 0.9
 
-      Text {
-        anchors.centerIn: parent
-        text: "PROJECT OPEN"
-        font.pixelSize: 16
-        font.bold: true
-        color: "darkgreen"
+      Flickable {
+        anchors.fill: parent
+        anchors.margins: 8
+        contentWidth: width
+        contentHeight: debugColumn.height
+        clip: true
+
+        Column {
+          id: debugColumn
+          width: parent.width
+          spacing: 6
+
+          Text {
+            text: "QField plugin diagnose"
+            font.bold: true
+            font.pixelSize: 16
+            color: Theme.textColor
+          }
+
+          Text {
+            width: parent.width
+            wrapMode: Text.WrapAnywhere
+            text: plugin.debugText
+            font.family: "monospace"
+            font.pixelSize: 12
+            color: Theme.textColor
+          }
+        }
       }
     }
   }
