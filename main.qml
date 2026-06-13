@@ -8,24 +8,39 @@ Item {
 
   property var mainWindow: iface.mainWindow()
   property bool scaleBoxVisible: true
+  property bool projectUiVisible: false
 
-  // Horisontal og vertikal luft inne i målestokkboksen
   property int boxPaddingX: 5
   property int boxPaddingY: 2
 
-  // Prøver å avgjøre om vi er i en aktiv prosjekt-/kartvisning.
-  // Dette er mer robust enn å tegne UI direkte ved plugin-load.
-  function hasActiveProjectView() {
+  function hasOpenProject() {
     try {
-      var mw = iface.mainWindow()
       var canvas = iface.mapCanvas()
-      return mw !== null && mw.contentItem !== null && canvas !== null && canvas.mapSettings !== null
+      if (!canvas || !canvas.mapSettings)
+        return false
+
+      // QField 4.2.2: canvas kan eksistere også uten prosjekt.
+      // Vi prøver derfor å sjekke om extent ser gyldig ut og om wrapper finnes.
+      var wrapper = canvas.mapCanvasWrapper
+      var extent = canvas.mapSettings.extent
+
+      if (!wrapper || !extent)
+        return false
+
+      // Hvis extent er null/ubrukelig i menyer, vil dette ofte sile dem bort.
+      if (extent.width <= 0 || extent.height <= 0)
+        return false
+
+      return true
     } catch (e) {
       return false
     }
   }
 
-  // Henter gjeldende målestokk fra kartet
+  function refreshVisibility() {
+    projectUiVisible = hasOpenProject()
+  }
+
   function currentScale() {
     try {
       return iface.mapCanvas().mapSettings.scale
@@ -34,8 +49,6 @@ Item {
     }
   }
 
-  // 9876 -> "9876"
-  // 10000 -> "10 000"
   function formatScaleNumber(value) {
     var rounded = Math.round(value)
     if (rounded >= 10000) {
@@ -44,12 +57,10 @@ Item {
     return rounded.toString()
   }
 
-  // Fjerner mellomrom ved innlesing av tekstfeltet
   function unformatScaleNumber(text) {
     return text.replace(/\s/g, "")
   }
 
-  // Setter ønsket målestokk
   function applyScale() {
     var rawText = unformatScaleNumber(scaleField.text)
 
@@ -75,150 +86,152 @@ Item {
     }
   }
 
-  // Loader sørger for at overlay kun opprettes når kartvisning finnes.
-  Loader {
-    id: overlayLoader
-    active: plugin.hasActiveProjectView()
-    sourceComponent: overlayComponent
+  Timer {
+    id: visibilityTimer
+    interval: 500
+    repeat: true
+    running: true
+    onTriggered: plugin.refreshVisibility()
   }
 
-  Component {
-    id: overlayComponent
+  Component.onCompleted: refreshVisibility()
 
-    Item {
-      id: overlayRoot
-      parent: plugin.mainWindow ? plugin.mainWindow.contentItem : null
+  Item {
+    id: overlayRoot
+    parent: plugin.mainWindow ? plugin.mainWindow.contentItem : null
+    anchors.fill: parent
+    visible: plugin.projectUiVisible
 
-      Rectangle {
-        id: scaleBackground
-        visible: plugin.scaleBoxVisible
+    Rectangle {
+      id: scaleBackground
+      visible: plugin.scaleBoxVisible
 
-        anchors {
-          top: parent.top
-          topMargin: 10
-          horizontalCenter: parent.horizontalCenter
+      anchors {
+        top: parent.top
+        topMargin: 10
+        horizontalCenter: parent.horizontalCenter
+      }
+
+      width: scaleRow.width + (plugin.boxPaddingX * 2)
+      height: scaleRow.height + (plugin.boxPaddingY * 2)
+
+      color: Theme.white
+      opacity: 0.6
+      radius: 4
+
+      border {
+        color: Theme.mainColor
+        width: 1
+      }
+
+      Row {
+        id: scaleRow
+        anchors.centerIn: parent
+        spacing: 2
+
+        Text {
+          id: scalePrefix
+          anchors.verticalCenter: parent.verticalCenter
+          font.pixelSize: 18
+          font.bold: true
+          color: Theme.textColor
+          text: "1 :"
         }
 
-        width: scaleRow.width + (plugin.boxPaddingX * 2)
-        height: scaleRow.height + (plugin.boxPaddingY * 2)
+        TextField {
+          id: scaleField
+          anchors.verticalCenter: parent.verticalCenter
 
-        color: Theme.white
-        opacity: 0.6
-        radius: 4
+          width: Math.max(36, contentWidth + 4)
+          height: 24
 
-        border {
-          color: Theme.mainColor
-          width: 1
-        }
+          font.pixelSize: 18
+          font.bold: true
+          color: Theme.textColor
+          text: plugin.formatScaleNumber(plugin.currentScale())
 
-        Row {
-          id: scaleRow
-          anchors.centerIn: parent
-          spacing: 2
+          inputMethodHints: Qt.ImhDigitsOnly
+          selectByMouse: true
+          horizontalAlignment: TextInput.AlignRight
 
-          Text {
-            id: scalePrefix
-            anchors.verticalCenter: parent.verticalCenter
-            font.pixelSize: 18
-            font.bold: true
-            color: Theme.textColor
-            text: "1 :"
+          leftPadding: 0
+          rightPadding: 0
+          topPadding: 0
+          bottomPadding: 0
+
+          background: Rectangle {
+            color: "transparent"
+            border.width: 0
           }
 
-          TextField {
-            id: scaleField
-            anchors.verticalCenter: parent.verticalCenter
-
-            width: Math.max(36, contentWidth + 4)
-            height: 24
-
-            font.pixelSize: 18
-            font.bold: true
-            color: Theme.textColor
-            text: plugin.formatScaleNumber(plugin.currentScale())
-
-            inputMethodHints: Qt.ImhDigitsOnly
-            selectByMouse: true
-            horizontalAlignment: TextInput.AlignRight
-
-            leftPadding: 0
-            rightPadding: 0
-            topPadding: 0
-            bottomPadding: 0
-
-            background: Rectangle {
-              color: "transparent"
-              border.width: 0
-            }
-
-            onActiveFocusChanged: {
-              if (activeFocus) {
-                scaleField.text = Math.round(plugin.currentScale()).toString()
-                scaleField.selectAll()
-              } else {
-                plugin.applyScale()
-              }
-            }
-
-            onAccepted: plugin.applyScale()
-          }
-        }
-
-        Connections {
-          target: iface.mapCanvas() ? iface.mapCanvas().mapSettings : null
-
-          function onExtentChanged() {
-            if (!scaleField.activeFocus) {
-              scaleField.text = plugin.formatScaleNumber(plugin.currentScale())
+          onActiveFocusChanged: {
+            if (activeFocus) {
+              scaleField.text = Math.round(plugin.currentScale()).toString()
+              scaleField.selectAll()
+            } else {
+              plugin.applyScale()
             }
           }
+
+          onAccepted: plugin.applyScale()
         }
       }
 
+      Connections {
+        target: iface.mapCanvas() ? iface.mapCanvas().mapSettings : null
+
+        function onExtentChanged() {
+          if (!scaleField.activeFocus && plugin.projectUiVisible) {
+            scaleField.text = plugin.formatScaleNumber(plugin.currentScale())
+          }
+        }
+      }
+    }
+
+    Rectangle {
+      id: toggleButton
+      visible: true
+
+      anchors {
+        top: parent.top
+        topMargin: 10
+        right: parent.right
+        rightMargin: 65
+      }
+
+      width: 42
+      height: scaleBackground.height
+
+      color: Theme.white
+      opacity: 0.6
+      radius: 4
+
+      border {
+        color: Theme.mainColor
+        width: 1
+      }
+
+      Text {
+        anchors.centerIn: parent
+        text: "1:n"
+        font.pixelSize: 16
+        font.bold: true
+        color: plugin.scaleBoxVisible ? "black" : "gray"
+      }
+
       Rectangle {
-        id: toggleButton
+        visible: !plugin.scaleBoxVisible
+        anchors.centerIn: parent
+        width: 24
+        height: 2
+        color: "gray"
+        rotation: -30
+        antialiasing: true
+      }
 
-        anchors {
-          top: parent.top
-          topMargin: 10
-          right: parent.right
-          rightMargin: 65
-        }
-
-        width: 42
-        height: scaleBackground.height
-
-        color: Theme.white
-        opacity: 0.6
-        radius: 4
-
-        border {
-          color: Theme.mainColor
-          width: 1
-        }
-
-        Text {
-          anchors.centerIn: parent
-          text: "1:n"
-          font.pixelSize: 16
-          font.bold: true
-          color: plugin.scaleBoxVisible ? "black" : "gray"
-        }
-
-        Rectangle {
-          visible: !plugin.scaleBoxVisible
-          anchors.centerIn: parent
-          width: 24
-          height: 2
-          color: "gray"
-          rotation: -30
-          antialiasing: true
-        }
-
-        MouseArea {
-          anchors.fill: parent
-          onClicked: plugin.scaleBoxVisible = !plugin.scaleBoxVisible
-        }
+      MouseArea {
+        anchors.fill: parent
+        onClicked: plugin.scaleBoxVisible = !plugin.scaleBoxVisible
       }
     }
   }
