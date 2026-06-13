@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import org.qfield
+import org.qgis
 import Theme
 
 Item {
@@ -15,24 +16,16 @@ Item {
 
   function hasOpenProject() {
     try {
-      var canvas = iface.mapCanvas()
-      if (!canvas || !canvas.mapSettings)
+      if (!ProjectUtils || !ProjectUtils.project)
         return false
 
-      // QField 4.2.2: canvas kan eksistere også uten prosjekt.
-      // Vi prøver derfor å sjekke om extent ser gyldig ut og om wrapper finnes.
-      var wrapper = canvas.mapCanvasWrapper
-      var extent = canvas.mapSettings.extent
-
-      if (!wrapper || !extent)
+      var fn = ProjectUtils.project.fileName
+      if (fn === undefined || fn === null)
         return false
 
-      // Hvis extent er null/ubrukelig i menyer, vil dette ofte sile dem bort.
-      if (extent.width <= 0 || extent.height <= 0)
-        return false
-
-      return true
+      return fn.toString().length > 0
     } catch (e) {
+      console.log("hasOpenProject failed: " + e)
       return false
     }
   }
@@ -87,7 +80,6 @@ Item {
   }
 
   Timer {
-    id: visibilityTimer
     interval: 500
     repeat: true
     running: true
@@ -130,7 +122,6 @@ Item {
         spacing: 2
 
         Text {
-          id: scalePrefix
           anchors.verticalCenter: parent.verticalCenter
           font.pixelSize: 18
           font.bold: true
@@ -190,7 +181,6 @@ Item {
 
     Rectangle {
       id: toggleButton
-      visible: true
 
       anchors {
         top: parent.top
